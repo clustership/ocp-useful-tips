@@ -60,3 +60,10 @@ oc apply -f tmp-validation.yml
 ```
 
 
+# Get events in the right order
+
+```bash
+ oc -n openshift-marketplace get events --sort-by='.lastTimestamp'
+ ```
+ 
+ 
