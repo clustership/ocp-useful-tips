@@ -66,4 +66,16 @@ oc apply -f tmp-validation.yml
  oc -n openshift-marketplace get events --sort-by='.lastTimestamp'
  ```
  
+ # Get self-signed OCP certificate
  
+ WIP
+ 
+ ```bash
+ oc get secret signing-key -n openshift-service-ca -o jsonpath='{.data.tls\.crt}' | base64 -d > ocp-ca.pem
+ 
+ echo quit | openssl s_client -showcerts -servername server -connect api.osp-ocp4-07.clustership.com:6443 > cacert.pem
+ ```
+ 
+It does not work with curl.
+
+See: https://stackoverflow.com/questions/17597457/why-wont-curl-recognise-a-self-signed-ssl-certificate/21262787#21262787
