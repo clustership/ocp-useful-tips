@@ -19,8 +19,9 @@
     args:
       creates: "{{ '~/.krew' | expanduser }}"
     environment:
-      HOME: "{{ '~' | expanduser }}"
+      HOME: "{{ '~' | expanduser }}"
     tags:
+    - never
     - krew
 
   - name: Update bashrc to add krew path
@@ -28,6 +29,7 @@
       dest: "{{ '~/.bashrc' | expanduser }}"
       line: 'export PATH="${KREW_ROOT:-$HOME/.krew}/bin:$PATH"'
     tags:
+    - never
     - krew
 
   - name: Install krew plugins
@@ -41,6 +43,7 @@
       HOME: "{{ '~' | expanduser }}"
       PATH: "{{ '~/.krew/bin' | expanduser }}:{{ lookup('env', 'PATH') }}"
     tags:
+    - never
     - ns
     - ctx
 
@@ -53,27 +56,39 @@
     - ns
     - ctx
     tags:
+    - never
     - ns
     - ctx
 
   - name: Get compdir
     command: "pkg-config --variable=completionsdir bash-completion"
     register: compdir_rc
+    changed_when: False
+    tags:
+    - never
+    - ns
+    - ctx
 
   - name: Set fact for compdir
     set_fact:
-      compdir: "{{ compdir_rc.stdout }}"
+      compdir: "{{ compdir_rc.stdout }}"
+    tags:
+    - never
+    - ns
+    - ctx
 
   - name: Download bash completion script
     get_url:
       url: "https://raw.githubusercontent.com/ahmetb/kubectx/master/completion/kube{{ item }}.bash"
       dest: "{{ compdir }}/kube{{ item }}"
       mode: '0644'
+      force: no
     become: True
     loop:
     - ns
     - ctx
     tags:
+    - never
     - ns
     - ctx
 
@@ -82,10 +97,14 @@
       repo: https://github.com/junegunn/fzf.git
       dest: "{{ '~/.fzf' | expanduser }}"
       depth: 1
+    register: fzf
     tags:
+    - never
     - fzf
 
   - name: Install fzf
     command: "{{ '~/.fzf/install' | expanduser }}"
+    when: fzf.changed
     tags:
+    - never
     - fzf
