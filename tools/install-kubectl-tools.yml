@@ -1,0 +1,91 @@
+#!/usr/bin/env ansible-playbook
+---
+# file: run-sno.yml
+- hosts: localhost
+  become: False
+
+  tasks:
+  - name: Install krew
+    ansible.builtin.shell: |
+      (
+        set -x; cd "$(mktemp -d)" &&
+        OS="$(uname | tr '[:upper:]' '[:lower:]')" &&
+        ARCH="$(uname -m | sed -e 's/x86_64/amd64/' -e 's/\(arm\)\(64\)\?.*/\1\2/' -e 's/aarch64$/arm64/')" &&
+        KREW="krew-${OS}_${ARCH}" &&
+        curl -fsSLO "https://github.com/kubernetes-sigs/krew/releases/latest/download/${KREW}.tar.gz" &&
+        tar zxvf "${KREW}.tar.gz" &&
+        ./"${KREW}" install krew
+      )
+    args:
+      creates: "{{ '~/.krew' | expanduser }}"
+    environment:
+      HOME: "{{ '~' | expanduser }}"
+    tags:
+    - krew
+
+  - name: Update bashrc to add krew path
+    ansible.builtin.lineinfile:
+      dest: "{{ '~/.bashrc' | expanduser }}"
+      line: 'export PATH="${KREW_ROOT:-$HOME/.krew}/bin:$PATH"'
+    tags:
+    - krew
+
+  - name: Install krew plugins
+    ansible.builtin.command: "kubectl krew install {{ item }}"
+    args:
+      creates: "{{ '~/.krew/bin/kubectl-' + item | expanduser }}"
+    loop:
+    - ctx
+    - ns
+    environment:
+      HOME: "{{ '~' | expanduser }}"
+      PATH: "{{ '~/.krew/bin' | expanduser }}:{{ lookup('env', 'PATH') }}"
+    tags:
+    - ns
+    - ctx
+
+  - name: Create a symbolic link for krew plugins
+    ansible.builtin.file:
+      src: "{{ '~/.krew/bin/kubectl-' + item | expanduser }}"
+      dest: "{{ '~/.krew/bin/kube' + item | expanduser }}"
+      state: link
+    loop:
+    - ns
+    - ctx
+    tags:
+    - ns
+    - ctx
+
+  - name: Get compdir
+    command: "pkg-config --variable=completionsdir bash-completion"
+    register: compdir_rc
+
+  - name: Set fact for compdir
+    set_fact:
+      compdir: "{{ compdir_rc.stdout }}"
+
+  - name: Download bash completion script
+    get_url:
+      url: "https://raw.githubusercontent.com/ahmetb/kubectx/master/completion/kube{{ item }}.bash"
+      dest: "{{ compdir }}/kube{{ item }}"
+      mode: '0644'
+    become: True
+    loop:
+    - ns
+    - ctx
+    tags:
+    - ns
+    - ctx
+
+  - name: Clone fzf for installation
+    ansible.builtin.git:
+      repo: https://github.com/junegunn/fzf.git
+      dest: "{{ '~/.fzf' | expanduser }}"
+      depth: 1
+    tags:
+    - fzf
+
+  - name: Install fzf
+    command: "{{ '~/.fzf/install' | expanduser }}"
+    tags:
+    - fzf
