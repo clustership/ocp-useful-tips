@@ -1,0 +1,128 @@
+#!/usr/bin/env ansible-playbook
+---
+# file: configure-env.yaml
+- hosts: localhost
+  become: False
+
+  tasks:
+  - name: Define .bashrc location
+    set_fact:
+      bashrc: "{{ '~/.bashrc' | expanduser }}"
+      vimrc: "{{ '~/.vimrc' | expanduser }}"
+    tags:
+    - always
+
+  - name: Configure history in bashrc
+    blockinfile:
+      path: "{{ bashrc }}"
+      block: |
+
+        export HISTSIZE=12000
+        export HISTFILESIZE=10000
+        export HISTTIMEFORMAT="%h %d %H:%M:%S "
+        
+        export HISTCONTROL=ignorespace:erasedups
+        
+        export HISTIGNORE="ls:ps:history"
+        
+        shopt -s histappend
+        shopt -s cmdhist
+      marker: "# {mark} HISTORY"
+    tags:
+    - never
+    - bashrc
+    - history
+
+  - name: Add useful aliases
+    blockinfile:
+      path: "{{ bashrc }}"
+      block: |
+
+        alias la='ls -la'
+        alias ll='ls -ll'
+
+        alias vi=vim
+
+        alias meminfo='free -m -l -t'
+
+        ## get top process eating memory
+        alias psmem='ps auxf | sort -nr -k 4'
+        alias psmem10='ps auxf | sort -nr -k 4 | head -10'
+
+        ## get top process eating cpu ##
+        alias pscpu='ps auxf | sort -nr -k 3'
+        alias pscpu10='ps auxf | sort -nr -k 3 | head -10'
+
+      marker: "# {mark} useful aliases"
+    tags:
+    - never
+    - bashrc
+    - aliases
+
+  - name: Add makepasswd function
+    blockinfile:
+      path: "{{ bashrc }}"
+      block: |
+
+        makepasswd(){ < /dev/urandom tr -dc _A-Z-a-z-0-9 | head -c${1:-16};echo;}
+
+      marker: "# {mark} useful functions"
+    tags:
+    - never
+    - bashrc
+    - functions
+
+  - name: Create vimrc if not exists
+    file:
+      state: touch
+      path: "{{ vimrc }}"
+    changed_when: False
+    tags:
+    - never
+    - bashrc
+    - vimrc
+
+  - name: Configure vimrc
+    blockinfile:
+      path: "{{ vimrc }}"
+      block: |
+
+        " 
+        " see https://vim.fandom.com/wiki/Example_vimrc
+        "
+        set nocompatible
+
+        if has('filetype')
+          filetype indent plugin on
+        endif
+
+        if has('syntax')
+          syntax on
+        endif
+
+        set hidden
+
+        set ignorecase
+        set smartcase
+
+        set backspace=indent,eol,start
+        
+        set autoindent
+
+        set confirm
+
+        set visualbell
+
+        set t_vb=
+
+        set shiftwidth=2
+        set softtabstop=2
+        set expandtab
+
+        " set shiftwidth=4
+        " set tabstop=4
+      marker: '" {mark} Ansible configured .vimrc'
+    tags:
+    - never
+    - vimrc
+
