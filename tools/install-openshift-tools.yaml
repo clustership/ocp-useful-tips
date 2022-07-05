@@ -8,13 +8,13 @@
   become: true
   vars:
     release_url: https://mirror.openshift.com/pub/openshift-v4/amd64/clients/ocp
-    release_version: 4.10.6
+    release_version: 4.10.17
     # release_version: 4.9.24
     pull_secret: "{{ '~/pull-secret.txt' | expanduser }}"
 
   tasks:
   - name: Register system
-    community.general.redhat_subscription:
+    redhat_subscription:
       state: present
       username: bob
       password: leponge
