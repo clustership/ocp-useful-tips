@@ -1,0 +1,15 @@
+#!/usr/bin/env ansible-playbook
+---
+# file: setup-rhel.yaml
+- hosts: localhost
+  become: False
+
+  tasks:
+  - name: Define .bashrc location
+    dnf:
+      state: present
+      name: "{{ item }}"
+    loop:
+    - bind-tools
+    - iproute
+    - net-tools
