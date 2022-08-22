@@ -2,7 +2,7 @@
 ---
 # file: setup-rhel.yaml
 - hosts: localhost
-  become: False
+  become: True
 
   tasks:
   - name: Define .bashrc location
@@ -10,6 +10,8 @@
       state: present
       name: "{{ item }}"
     loop:
-    - bind-tools
+    - bind-utils
     - iproute
     - net-tools
+    tags:
+    - never
