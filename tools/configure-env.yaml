@@ -119,6 +119,8 @@
         set softtabstop=2
         set expandtab
 
+        set nolist
+
         " set shiftwidth=4
         " set tabstop=4
       marker: '" {mark} Ansible configured .vimrc'

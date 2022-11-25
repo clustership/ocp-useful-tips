@@ -1,1 +1,4 @@
 localhost ansible_python_interpreter=/usr/bin/python3 ansible_connection=local
+
+[bm-provisioner]
+192.168.111.207
