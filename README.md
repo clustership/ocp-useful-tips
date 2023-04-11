@@ -1,5 +1,13 @@
 # Useful oc/OCP commands I usually used (and I have to look for quite often)
 
+
+## Find kernel version associated with OCP version
+
+```bash
+oc image info -a ~/.pull-secret.json --output json $(oc adm release info -a ~/.pull-secret.json --image-for=machine-os-content $(oc get clusterimagesets img4.12.7-x86-64-appsub -o jsonpath='{.spec.releaseImage}')) | jq .config.config.Labels | egrep coreos.rpm.kernel-rt-core
+  "com.coreos.rpm.kernel-rt-core": "4.18.0-372.46.1.rt7.203.el8_6.x86_64",
+  
+
 ## Get informations using template or jsonpath
 
 Get clusterID
